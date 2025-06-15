@@ -56,7 +56,7 @@ class ListNewsComponent extends React.Component {
     fetchNews = async () => {
     try {
         const token = localStorage.getItem("token");
-        const response = await axios.get("http://localhost:8081/api/v1/news", {
+        const response = await axios.get("http://localhost:8080/api/v1/news", {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -126,7 +126,7 @@ class ListNewsComponent extends React.Component {
     }
 
     deleteNews(id) {
-        axios.delete(`http://localhost:8081/api/v1/news/${id}`).then(() => {
+        axios.delete(`http://localhost:8080/api/v1/news/${id}`).then(() => {
             this.setState({ news: this.state.news.filter((news) => news.id !== id) });
         });
     }

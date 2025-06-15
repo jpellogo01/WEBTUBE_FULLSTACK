@@ -95,7 +95,7 @@ const DynamicForm = () => {
         formPayload.append('photos', file);
     });
 
-    fetch('http://localhost:8081/api/v1/contribute-news', {
+    fetch('http://localhost:8080/api/v1/contribute-news', {
         method: 'POST',
         body: formPayload
     })

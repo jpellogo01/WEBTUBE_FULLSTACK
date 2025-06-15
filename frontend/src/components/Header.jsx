@@ -29,7 +29,7 @@ const Header2 = () => {
                 </button>
                 <div className={`${collapsed ? 'collapse' : ''} navbar-collapse`} id="navbarNav">
                     <NavLink className="nav-link" to="/" onClick={() => setCollapsed(true)}> {/* Add this NavLink */}
-                        <span className="navbar-title">THE DLSAU WEB-TUBE</span> {/* Use a span element */}
+                        <span className="navbar-title">THE DLSAU WEBTUBE</span> {/* Use a span element */}
                     </NavLink>
                     <ul className="navbar-nav ml-auto">
                         <li className="nav-item">

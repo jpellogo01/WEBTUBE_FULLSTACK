@@ -56,7 +56,7 @@ class ListUserComponent extends React.Component {
   fetchUsers = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get("http://localhost:8081/api/v1/user", {
+      const response = await axios.get("http://localhost:8080/api/v1/user", {
         headers: {
           Authorization: `Bearer ${token}`
         }

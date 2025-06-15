@@ -1,9 +1,9 @@
 import axios from 'axios';
 
-const NEWS_API_BASE_URL = "http://localhost:8081/api/v1/news";
-const NEWS_API_BASE_URL2 = "http://localhost:8081/api/v1/news/approve";
-const NEWS_API_BASE_URL3 = "http://localhost:8081/api/v1/news/reject";
-const NEWS_API_BASE_URL4 = "http://localhost:8081/api/v1/AInews";
+const NEWS_API_BASE_URL = "http://localhost:8080/api/v1/news";
+const NEWS_API_BASE_URL2 = "http://localhost:8080/api/v1/news/approve";
+const NEWS_API_BASE_URL3 = "http://localhost:8080/api/v1/news/reject";
+const NEWS_API_BASE_URL4 = "http://localhost:8080/api/v1/AInews";
 
 
 
@@ -12,7 +12,7 @@ class NewsService {
 
     getPendingNews() {
         const token = localStorage.getItem('token'); // Get the token from local storage
-        return axios.get("http://localhost:8081/api/v1/news/pending", {
+        return axios.get("http://localhost:8080/api/v1/news/pending", {
             headers: {
                 Authorization: `Bearer ${token}`,
             },

@@ -20,7 +20,7 @@ class ListContributedNewsComponent extends React.Component {
 
     fetchContributedNews = async () => {
         try {
-            const response = await axios.get("http://localhost:8081/api/v1/contribute-news");
+            const response = await axios.get("http://localhost:8080/api/v1/contribute-news");
             this.setState({ contributedNews: response.data, loading: false });
         } catch (error) {
             console.error("Error fetching contributed news:", error);
@@ -34,7 +34,7 @@ class ListContributedNewsComponent extends React.Component {
         if (!confirmed) return;
 
         try {
-            await axios.delete(`http://localhost:8081/api/v1/contribute-news/${id}`);
+            await axios.delete(`http://localhost:8080/api/v1/contribute-news/${id}`);
             this.setState({
                 contributedNews: this.state.contributedNews.filter((item) => item.id !== id),
             });

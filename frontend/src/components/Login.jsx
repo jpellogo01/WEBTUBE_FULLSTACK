@@ -14,7 +14,7 @@ function Login({ onLogin }) {
         // Fetch username suggestions from the database
         async function fetchSuggestions() {
             try {
-                const response = await axios.get("http://localhost:8081/api/v1/user"); // Assuming this endpoint returns username suggestions
+                const response = await axios.get("http://localhost:8080/api/v1/user"); // Assuming this endpoint returns username suggestions
                 setSuggestions(response.data.map(user => user.username));
             } catch (error) {
                 console.error('Error fetching username suggestions:', error);
@@ -45,7 +45,7 @@ function Login({ onLogin }) {
         }
     
         try {
-            const response = await axios.post("http://localhost:8081/api/v1/login", {
+            const response = await axios.post("http://localhost:8080/api/v1/login", {
                 username: username,
                 password: password,
             });

@@ -22,7 +22,7 @@ class NotificationComponent extends Component {
   fetchNotifications = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:8081/api/v1/news/notifications', {
+      const response = await axios.get('http://localhost:8080/api/v1/news/notifications', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -38,7 +38,7 @@ class NotificationComponent extends Component {
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        `http://localhost:8081/api/v1/news/notifications/mark-read/${notificationId}`,
+        `http://localhost:8080/api/v1/news/notifications/mark-read/${notificationId}`,
         {},
         {
           headers: {
@@ -64,7 +64,7 @@ class NotificationComponent extends Component {
     try {
       const token = localStorage.getItem('token');
       await axios.delete(
-        `http://localhost:8081/api/v1/news/notification/${notificationId}`,
+        `http://localhost:8080/api/v1/news/notification/${notificationId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

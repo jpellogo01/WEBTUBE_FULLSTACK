@@ -42,7 +42,7 @@ class ListNewsComponent extends Component {
         }
     
         // Make the API request to approve the news
-        axios.post(`http://localhost:8081/api/v1/news/approve/${id}`, {}, {
+        axios.post(`http://localhost:8080/api/v1/news/approve/${id}`, {}, {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -85,7 +85,7 @@ class ListNewsComponent extends Component {
         }
     
         // Make the API call to reject the news
-        axios.post(`http://localhost:8081/api/v1/news/reject/${id}`, {}, {
+        axios.post(`http://localhost:8080/api/v1/news/reject/${id}`, {}, {
             headers: {
                 Authorization: `Bearer ${token}`,
             },

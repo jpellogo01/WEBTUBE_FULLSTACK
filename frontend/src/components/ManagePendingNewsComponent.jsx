@@ -33,7 +33,7 @@ class PendingNewsComponent extends React.Component {
  fetchNews = async () => {
   try {
     const token = localStorage.getItem("token");
-    const response = await axios.get("http://localhost:8081/api/v1/pending/news", {
+    const response = await axios.get("http://localhost:8080/api/v1/pending/news", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -100,7 +100,7 @@ class PendingNewsComponent extends React.Component {
 
   approveNews(id) {
     const token = localStorage.getItem("token");
-    const NEWS_API_BASE_URL = "http://localhost:8081/api/v1";
+    const NEWS_API_BASE_URL = "http://localhost:8080/api/v1";
 
     // Get the publicationDate from the state (if it exists)
     const publicationDate = this.state.publicationDates[id];

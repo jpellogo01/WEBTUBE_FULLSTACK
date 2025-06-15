@@ -33,7 +33,7 @@ class ViewNewsDetailsForm extends Component {
     }
 
     fetchComments = () => {
-        axios.get(`http://localhost:8081/api/v1/news/approved/comments/${this.state.id}`)
+        axios.get(`http://localhost:8080/api/v1/news/approved/comments/${this.state.id}`)
             .then(response => this.setState({ comments: response.data }))
             .catch(error => console.error('Error fetching comments:', error));
     };
@@ -57,7 +57,7 @@ class ViewNewsDetailsForm extends Component {
             // No need to include visitorId here anymore
         };
 
-        axios.post(`http://localhost:8081/api/v1/comment-news/${id}`, commentData, {
+        axios.post(`http://localhost:8080/api/v1/comment-news/${id}`, commentData, {
             headers: {
                 'Visitor-Id': visitorId,
                 'Content-Type': 'application/json'
@@ -90,7 +90,7 @@ class ViewNewsDetailsForm extends Component {
     handleSummarize = () => {
         this.setState({ loading: true });
 
-        axios.post(`http://localhost:8081/hitOpenaiApi/${this.state.id}`)
+        axios.post(`http://localhost:8080/hitOpenaiApi/${this.state.id}`)
             .then((response) => {
                 this.setState({ summary: response.data, showModal: true, loading: false });
             })
@@ -102,7 +102,7 @@ class ViewNewsDetailsForm extends Component {
     deleteComment = (commentId) => {
         const visitorId = localStorage.getItem('visitorId');
 
-        axios.delete(`http://localhost:8081/api/v1/user-delete-comment/${commentId}`, {
+        axios.delete(`http://localhost:8080/api/v1/user-delete-comment/${commentId}`, {
             headers: {
                 'Visitor-Id': visitorId
             }

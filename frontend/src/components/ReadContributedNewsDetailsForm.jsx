@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import axios from 'axios';
 
-const CONTRIBUTED_NEWS_API_BASE_URL = 'http://localhost:8081/api/v1/contribute-news';
+const CONTRIBUTED_NEWS_API_BASE_URL = 'http://localhost:8080/api/v1/contribute-news';
 
 class ReadContributedNewsDetailsForm extends Component {
     constructor(props) {

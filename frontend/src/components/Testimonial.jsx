@@ -92,7 +92,7 @@ class balitaraneta extends Component {
 
     // Then fetch IP and track view in the background
     this.getViewerIp().then(viewerIp => {
-        axios.post(`http://localhost:8081/api/v1/view-news/${news.id}?viewerIp=${viewerIp}`)
+        axios.post(`http://localhost:8080/api/v1/view-news/${news.id}?viewerIp=${viewerIp}`)
             .then(() => {
                 console.log('View tracked successfully');
             })

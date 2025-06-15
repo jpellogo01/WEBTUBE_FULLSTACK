@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-const NEWS_API_BASE_URL2 = "http://localhost:8081/api/v1/public-news";
-const NEWS_API_BASE_URL3 = "http://localhost:8081/api/v1";
+const NEWS_API_BASE_URL2 = "http://localhost:8080/api/v1/public-news";
+const NEWS_API_BASE_URL3 = "http://localhost:8080/api/v1";
 
 
 class PublicNewService {
