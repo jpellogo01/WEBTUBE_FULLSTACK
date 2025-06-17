@@ -7,6 +7,7 @@ WORKDIR /app
 # Copy the jar file
 COPY target/site-0.0.1-SNAPSHOT.jar app.jar
 
+
 # Expose the port your app uses
 EXPOSE 8081
 

@@ -1,10 +1,11 @@
+version: '3.8'
 
 services:
   backend:
     build: ./backend
     container_name: webtube-backend
     ports:
-      - "8080:8081"
+      - "8081:8080"
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/dlsauwebtubedb
       SPRING_DATASOURCE_USERNAME: root
