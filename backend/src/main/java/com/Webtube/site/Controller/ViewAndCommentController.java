@@ -27,7 +27,7 @@ public class ViewAndCommentController {
     private NewsRepository newsRepository;
 
     @Autowired
-    private com.Webtube.site.Service.ProfanityCheckerService profanityCheckerService;
+    private com.Webtube.site.Security.services.ProfanityCheckerService profanityCheckerService;
 
     // Endpoint to get all comments for a specific news item
     @GetMapping("news/approved/comments/{newsId}")
