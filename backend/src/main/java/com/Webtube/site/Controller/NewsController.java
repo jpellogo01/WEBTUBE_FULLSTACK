@@ -1,344 +1,84 @@
+// File: NewsController.java
 package com.Webtube.site.Controller;
 
 import com.Webtube.site.Exception.NewsNotFoundException;
 import com.Webtube.site.Model.News;
-import com.Webtube.site.Repository.*;
+import com.Webtube.site.Service.NewsService;
 import jakarta.transaction.Transactional;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.List;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-
-import javax.imageio.ImageIO;
-
-@CrossOrigin(origins = { "http://localhost:3000", "http://192.168.254.144:3000" })
+@CrossOrigin(origins = {"http://localhost:3000", "http://192.168.254.144:3000"})
 @RestController
-// @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_AUTHOR')")
 @RequestMapping("/api/v1")
-public class NewsController<NewsService> {
+public class NewsController {
 
     @Autowired
-    private NewsRepository newsRepository;
-    @Autowired
-    private UsersRepository userRepository;
-
-    @Autowired
-    private CommentRepository commentRepository;
-
-    @Autowired
-    private ViewRepository viewRepository;
-    @Autowired
-    private NotificationRepository notificationRepository;
-
-    private static final Logger logger = LoggerFactory.getLogger(NewsController.class);
+    private NewsService newsService;
 
     @Value("${openai.api.key}")
     private String openAiApiKey;
 
     @GetMapping("/news")
-    public List<News> getAllNews() {
-        return newsRepository.findAll();
+    public ResponseEntity<List<News>> getAllNews() {
+        List<News> newsList = newsService.getAllNews();
+        return ResponseEntity.ok(newsList);
     }
 
     @GetMapping("/news/{id}")
-    public News getNewsById(@PathVariable Long id) {
-        return newsRepository.findById(id)
-                .orElseThrow(() -> new NewsNotFoundException("News not found with id " + id));
+    public ResponseEntity<News> getNewsById(@PathVariable Long id) {
+        News news = newsService.getNewsById(id);
+        return ResponseEntity.ok(news);
     }
 
-    // public endpoint to contribute content
     @PostMapping("/news-contribute")
     public ResponseEntity<String> createNewsWithContentAndPhotos(
             @RequestParam(value = "content", required = false) String content,
             @RequestParam(value = "additionalPhotos", required = false) MultipartFile[] additionalPhotos) {
 
-        try {
-            News newNews = new News();
-
-            // Set content if provided
-            if (content != null) {
-                newNews.setContent(content);
-            }
-
-            // Handle additional photos
-            List<byte[]> additionalPhotosList = new ArrayList<>();
-            if (additionalPhotos != null) {
-                for (MultipartFile photo : additionalPhotos) {
-                    if (!photo.isEmpty()) {
-                        additionalPhotosList.add(photo.getBytes());
-                    }
-                }
-            }
-
-            newNews.setAdditionalPhotos(additionalPhotosList);
-
-            // Save to the database
-            newsRepository.save(newNews);
-
-            return ResponseEntity.status(201).body("News content and photos saved successfully.");
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(500).body("Error while saving news: " + e.getMessage());
-        }
+        newsService.createNewsWithContentAndPhotos(content, additionalPhotos);
+        return ResponseEntity.status(201).body("News content and photos saved successfully.");
     }
 
-    // AI Integration Method
-    public String callOpenAI(String prompt) {
-        String apiUrl = "https://api.openai.com/v1/chat/completions";
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(openAiApiKey); // GOOD ✅
-
-        Map<String, Object> requestBody = new HashMap<>();
-        requestBody.put("model", "gpt-4o");
-        requestBody.put("messages", List.of(Map.of("role", "user", "content", prompt)));
-
-        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
-        RestTemplate restTemplate = new RestTemplate();
-
-        ResponseEntity<Map> response = restTemplate.postForEntity(apiUrl, entity, Map.class);
-
-        Object choicesObj = response.getBody().get("choices");
-
-        if (choicesObj instanceof List) {
-            List<?> choices = (List<?>) choicesObj;
-            if (!choices.isEmpty() && choices.get(0) instanceof Map) {
-                Map<?, ?> choiceMap = (Map<?, ?>) choices.get(0);
-                Object messageObj = choiceMap.get("message");
-                if (messageObj instanceof Map) {
-                    Map<?, ?> messageMap = (Map<?, ?>) messageObj;
-                    Object content = messageMap.get("content");
-                    if (content != null) {
-                        return content.toString();
-                    }
-                }
-            }
-        }
-
-        return "No response from OpenAI.";
-    }
-
-    // Create or Update AI News
     @PostMapping("/AInews")
     public ResponseEntity<String> createOrUpdateNewsAi(
-
             @RequestParam(value = "title", required = false) String title,
             @RequestParam(value = "thumbnailUrl", required = false) MultipartFile thumbnailUrl,
             @RequestParam(value = "description", required = false) String description,
             @RequestParam(value = "author", required = false) String author,
-            @RequestParam(value = "content") String content, // REQUIRED
+            @RequestParam(value = "content") String content,
             @RequestParam(value = "category", required = false) String category,
             @RequestParam(value = "status", required = false) String status,
             @RequestParam(value = "thumbnaillink", required = false) String thumbnaillink,
             @RequestParam(value = "additionalPhotos", required = false) MultipartFile[] additionalPhotos,
             @RequestParam(value = "embedYoutubeUrl", required = false) String embedYoutubeUrl) {
 
-        try {
-            News newNews = new News();
-
-            // AI-generated title and description if missing
-            if (title == null || title.trim().isEmpty() || description == null || description.trim().isEmpty()) {
-                String prompt = """
-                                 Generate a catchy news title and a short 10-15 words introductory summary for the following content.\s
-                                The summary should sound like the first paragraph of a news article and must not use 5Ws formatting.
-
-                                Content:
-                                %s
-
-                                Respond only in this format:
-                                Title: <title>
-                                Description: <description>
-
-                        """
-                        .formatted(content.trim());
-                System.out.println("Calling OpenAI...");
-
-                String aiResult = callOpenAI(prompt);
-
-                // DEBUG — see what AI returned
-                logger.info("AI Result: {}", aiResult);
-
-                // Use regex to extract title and description
-                Pattern titlePattern = Pattern.compile("(?i)title:\\s*(.*)");
-                Pattern descriptionPattern = Pattern.compile("(?i)description:\\s*(.*)");
-
-                Matcher titleMatcher = titlePattern.matcher(aiResult);
-                Matcher descriptionMatcher = descriptionPattern.matcher(aiResult);
-
-                if ((title == null || title.trim().isEmpty()) && titleMatcher.find()) {
-                    newNews.setTitle(titleMatcher.group(1).trim());
-                }
-                if ((description == null || description.trim().isEmpty()) && descriptionMatcher.find()) {
-                    newNews.setDescription(descriptionMatcher.group(1).trim());
-                }
-                logger.info("Final Title: {}", newNews.getTitle());
-                logger.info("Final Description: {}", newNews.getDescription());
-
-            } else {
-                newNews.setTitle(title);
-                newNews.setDescription(description);
-            }
-
-            newNews.setContent(content);
-            if (author != null)
-                newNews.setAuthor(author);
-            if (category != null)
-                newNews.setCategory(category);
-            if (thumbnaillink != null)
-                newNews.setThumbnaillink(thumbnaillink);
-            if (status != null)
-                newNews.setStatus("Pending"); // Always default to Pending
-            if (embedYoutubeUrl != null)
-                newNews.setEmbedYouTubeUrl(embedYoutubeUrl);
-
-            // Process thumbnail
-            if (thumbnailUrl != null && !thumbnailUrl.isEmpty()) {
-                if (thumbnailUrl.getSize() > 5 * 1024 * 1024) {
-                    return ResponseEntity.badRequest().body("Thumbnail exceeds 5MB limit.");
-                }
-                newNews.setThumbnailUrl(thumbnailUrl.getBytes());
-            }
-
-            // Process additional photos
-            List<byte[]> additionalPhotosList = new ArrayList<>();
-            if (additionalPhotos != null) {
-                for (MultipartFile photo : additionalPhotos) {
-                    if (!photo.isEmpty()) {
-                        additionalPhotosList.add(photo.getBytes());
-                    }
-                }
-            }
-            newNews.setAdditionalPhotos(additionalPhotosList);
-
-            // Save to DB
-            newsRepository.save(newNews);
-            return ResponseEntity.status(201).body("News created successfully.");
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(500).body("Error while creating news: " + e.getMessage());
-        }
+        newsService.createOrUpdateNewsAi(title, thumbnailUrl, description, author, content, category, status,
+                thumbnaillink, additionalPhotos, embedYoutubeUrl, openAiApiKey);
+        return ResponseEntity.status(201).body("News created successfully.");
     }
 
     @PostMapping("/news")
     public ResponseEntity<String> createOrUpdateNews(
             @RequestParam(value = "title", required = false) String title,
-            @RequestParam(value = "thumbnailUrl", required = false) MultipartFile thumbnailUrl, // For the main
-                                                                                                // thumbnail
+            @RequestParam(value = "thumbnailUrl", required = false) MultipartFile thumbnailUrl,
             @RequestParam(value = "description", required = false) String description,
             @RequestParam(value = "author", required = false) String author,
             @RequestParam(value = "content", required = false) String content,
             @RequestParam(value = "category", required = false) String category,
             @RequestParam(value = "status", required = false) String status,
             @RequestParam(value = "thumbnaillink", required = false) String thumbnaillink,
-            @RequestParam(value = "additionalPhotos", required = false) MultipartFile[] additionalPhotos, // Optional
-                                                                                                          // additional
-                                                                                                          // photos
-            @RequestParam(value = "embedYoutubeUrl", required = false) String embedYoutubeUrl) { // Optional YouTube URL
+            @RequestParam(value = "additionalPhotos", required = false) MultipartFile[] additionalPhotos,
+            @RequestParam(value = "embedYoutubeUrl", required = false) String embedYoutubeUrl) {
 
-        try {
-            News newNews = new News();
-
-            // Set fields if provided
-            if (title != null) {
-                newNews.setTitle(title);
-            }
-            if (description != null) {
-                newNews.setDescription(description);
-            }
-            if (author != null) {
-                newNews.setAuthor(author);
-            }
-            if (content != null) {
-                newNews.setContent(content);
-            }
-            if (category != null) {
-                newNews.setCategory(category);
-            }
-            if (thumbnaillink != null) {
-                newNews.setThumbnaillink(thumbnaillink);
-            }
-            if (status != null) {
-                newNews.setStatus("Pending");
-            }
-            if (embedYoutubeUrl != null) {
-                newNews.setEmbedYouTubeUrl(embedYoutubeUrl);
-            }
-
-            // Validate and set thumbnail image
-            if (thumbnailUrl != null && !thumbnailUrl.isEmpty()) {
-                if (thumbnailUrl.getSize() > 5 * 1024 * 1024) { // 5MB limit
-                    return ResponseEntity.badRequest().body("Thumbnail file size exceeds 5MB limit.");
-                }
-
-                String contentType = thumbnailUrl.getContentType();
-                if (!contentType.equals("image/jpeg") && !contentType.equals("image/png")) {
-                    return ResponseEntity.badRequest().body("Thumbnail must be a JPEG or PNG image.");
-                }
-
-                BufferedImage bufferedImage = ImageIO.read(thumbnailUrl.getInputStream());
-                if (bufferedImage == null) {
-                    return ResponseEntity.badRequest().body("Invalid thumbnail image file.");
-                }
-
-                newNews.setThumbnailUrl(thumbnailUrl.getBytes());
-            }
-
-            // Validate and collect additional photos
-            List<byte[]> additionalPhotosList = new ArrayList<>();
-            if (additionalPhotos != null) {
-                if (additionalPhotos.length > 10) { // optional limit
-                    return ResponseEntity.badRequest().body("Maximum 10 additional photos allowed.");
-                }
-
-                for (MultipartFile photo : additionalPhotos) {
-                    if (!photo.isEmpty()) {
-                        if (photo.getSize() > 5 * 1024 * 1024) {
-                            return ResponseEntity.badRequest().body("Each additional photo must be under 5MB.");
-                        }
-
-                        String contentType = photo.getContentType();
-                        if (!contentType.equals("image/jpeg") && !contentType.equals("image/png")) {
-                            return ResponseEntity.badRequest().body("Only JPEG or PNG images are allowed.");
-                        }
-
-                        BufferedImage bufferedImage = ImageIO.read(photo.getInputStream());
-                        if (bufferedImage == null) {
-                            return ResponseEntity.badRequest().body("One or more uploaded files are not valid images.");
-                        }
-
-                        additionalPhotosList.add(photo.getBytes());
-                    }
-                }
-            }
-
-            // Set the additional photos if any
-            newNews.setAdditionalPhotos(additionalPhotosList);
-
-            // Save the news item
-            newsRepository.save(newNews);
-
-            return ResponseEntity.status(201).body("News created successfully.");
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(500).body("Error while creating news: " + e.getMessage());
-        }
+        newsService.createOrUpdateNews(title, thumbnailUrl, description, author, content, category, status,
+                thumbnaillink, additionalPhotos, embedYoutubeUrl);
+        return ResponseEntity.status(201).body("News created successfully.");
     }
 
     @PutMapping("/news/{id}")
@@ -353,110 +93,17 @@ public class NewsController<NewsService> {
             @RequestParam(value = "status", required = false) String status,
             @RequestParam(value = "embedYoutubeUrl", required = false) String embedYoutubeUrl,
             @RequestParam(value = "additionalPhotos", required = false) MultipartFile[] additionalPhotos,
-            @RequestParam(value = "removedPhotos", required = false) List<String> removedPhotos // Accept IDs or
-                                                                                                // identifiers
-    ) throws NewsNotFoundException {
+            @RequestParam(value = "removedPhotos", required = false) List<String> removedPhotos) {
 
-        // Find the existing news by ID or throw an exception if not found
-        News existingNews = newsRepository.findById(newsId)
-                .orElseThrow(() -> new NewsNotFoundException("News content not found for this ID: " + newsId));
-
-        try {
-            // Update fields only if new values are provided
-            if (title != null) {
-                existingNews.setTitle(title);
-            }
-            if (description != null) {
-                existingNews.setDescription(description);
-            }
-            if (author != null) {
-                existingNews.setAuthor(author);
-            }
-            if (content != null) {
-                existingNews.setContent(content);
-            }
-            if (category != null) {
-                existingNews.setCategory(category);
-            }
-            if (status != null) {
-                existingNews.setStatus(status);
-            }
-            if (embedYoutubeUrl != null) {
-                existingNews.setEmbedYouTubeUrl(embedYoutubeUrl);
-            }
-
-            // Update the thumbnail if a new file is provided
-            if (thumbnailUrl != null && !thumbnailUrl.isEmpty()) {
-                if (thumbnailUrl.getSize() > 5 * 1024 * 1024) { // 5MB limit
-                    return ResponseEntity.badRequest().body("File size exceeds the 5MB limit.");
-                }
-                existingNews.setThumbnailUrl(thumbnailUrl.getBytes());
-            }
-
-            // Handle additional photos
-            List<byte[]> updatedAdditionalPhotos = new ArrayList<>();
-
-            // Remove specified photos from the existing list
-            if (removedPhotos != null && !removedPhotos.isEmpty()) {
-                for (byte[] existingPhoto : existingNews.getAdditionalPhotos()) {
-                    String encodedPhoto = Base64.getEncoder().encodeToString(existingPhoto);
-                    if (!removedPhotos.contains(encodedPhoto)) { // Keep photos not marked for removal
-                        updatedAdditionalPhotos.add(existingPhoto);
-                    }
-                }
-            } else {
-                // If no photos are to be removed, keep all existing photos
-                updatedAdditionalPhotos.addAll(existingNews.getAdditionalPhotos());
-            }
-
-            // Append new photos if provided
-            if (additionalPhotos != null) {
-                for (MultipartFile photo : additionalPhotos) {
-                    if (!photo.isEmpty()) {
-                        updatedAdditionalPhotos.add(photo.getBytes());
-                    }
-                }
-            }
-
-            // Update the news object with the updated list of photos
-            existingNews.setAdditionalPhotos(updatedAdditionalPhotos);
-
-            // Save the updated news
-            newsRepository.save(existingNews);
-
-            return ResponseEntity.ok("News updated successfully.");
-        } catch (IOException e) {
-            e.printStackTrace();
-            return ResponseEntity.status(500).body("Error processing the file: " + e.getMessage());
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(500).body("An error occurred while updating the news: " + e.getMessage());
-        }
+        newsService.updateNews(newsId, title, thumbnailUrl, description, author, content, category, status,
+                embedYoutubeUrl, additionalPhotos, removedPhotos);
+        return ResponseEntity.ok("News updated successfully.");
     }
 
-    // Delete News Content by id
     @Transactional
     @DeleteMapping("/news/{id}")
-    public ResponseEntity<?> deleteNews(@PathVariable(value = "id") long newsId) throws NewsNotFoundException {
-        // Find the news item
-        News news = newsRepository.findById(newsId)
-                .orElseThrow(() -> new NewsNotFoundException("News content not found for this ID :: " + newsId));
-
-        try {
-            // Delete associated comments
-            commentRepository.deleteByNewsId(newsId);
-
-            // Delete associated views
-            viewRepository.deleteByNewsId(newsId);
-
-            // Delete the news item
-            newsRepository.delete(news);
-
-            return ResponseEntity.ok("News, along with its comments and views, has been deleted successfully.");
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(500).body("An error occurred while deleting the news: " + e.getMessage());
-        }
+    public ResponseEntity<String> deleteNews(@PathVariable("id") long newsId) {
+        newsService.deleteNews(newsId);
+        return ResponseEntity.ok("News, along with its comments and views, has been deleted successfully.");
     }
-
 }

@@ -1,8 +1,6 @@
 package com.Webtube.site.payload.request;
 
 
-import com.Webtube.site.Model.Role;
-
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;

@@ -15,6 +15,5 @@ public interface NewsRepository extends JpaRepository<News, Long> {
     List<News> findByStatus(String status);
     @Query("SELECT n FROM News n WHERE n.status = :status AND n.publicationDate <= :currentTime")
     List<News> findByStatusAndPublicationDateBefore(@Param("status") String status, @Param("currentTime") Date currentTime);
-
-    Optional<Object> findByIdAndStatus(Long id, String approved);
+    Optional<News> findByIdAndStatus(Long id, String status);
 }

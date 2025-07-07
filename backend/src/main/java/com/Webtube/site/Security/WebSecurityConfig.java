@@ -21,7 +21,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 @EnableMethodSecurity
 
-public class WebSecurityConfig { // extends WebSecurityConfigurerAdapter {
+public class WebSecurityConfig { // extends WebSecurityConfigureAdapter {
   @Autowired
   UserDetailsServiceImpl userDetailsService;
 
@@ -66,28 +66,28 @@ public class WebSecurityConfig { // extends WebSecurityConfigurerAdapter {
                             .requestMatchers("/api/v1/public-news/**").permitAll()
                             .requestMatchers("/api/v1/contribute-news/**").permitAll()
                             .requestMatchers("/api/v1/news-contribute/**").permitAll()
-                            .requestMatchers("/api/v1/pubview-news/**").permitAll() // fixed pattern here
-                            .requestMatchers("/api/v1/lic-news/**\").permitAll()\n" + ".requestMatchers(\"/api/v1/news/views/**").permitAll() // fixed pattern here
-                            .requestMatchers("/api/v1/news/comments/pending").hasRole("ADMIN")
-                            .requestMatchers("/api/v1/news/comments/all").hasRole("ADMIN")
-                            .requestMatchers("/api/v1/delete-comment").hasRole("ADMIN")
-                            .requestMatchers("/api/v1/news/comment/{action}/{commentID}").hasRole("ADMIN")
-                            .requestMatchers("/api/v1/user-delete-comment/**").permitAll() // fixed pattern here
-                            .requestMatchers("/api/v1/comment-news/**").permitAll() // fixed pattern here
-                            .requestMatchers("/api/v1/comment-reply/**").permitAll() // fixed pattern here
-                            .requestMatchers("/api/v1/news/comments/**").permitAll() // fixed pattern here
-                            .requestMatchers("/api/v1/news").hasAnyRole("ADMIN", "AUTHOR")
-                            .requestMatchers("/api/v1/AInews").hasAnyRole("ADMIN", "AUTHOR")
-                            .requestMatchers("/api/v1/user/**").hasRole("ADMIN")
-                            .requestMatchers("/api/facebook/post/**").hasRole("ADMIN")
-                            .requestMatchers("/api/v1/news/rejected").hasRole("ADMIN")
-                            .requestMatchers("/api/v1/news/reject").hasRole("ADMIN")
-                            .requestMatchers("/api/v1/news/approved/comments/**").permitAll()
-                            .requestMatchers("/api/v1/approved/news").hasRole("ADMIN")
-                            .requestMatchers("/api/v1/approve/news").hasRole("ADMIN")
-                            .requestMatchers("/api/v1/pending/news").hasRole("ADMIN")
-                            .requestMatchers("/api/v1/news/notifications/**").hasRole("AUTHOR")
-                            .anyRequest().authenticated()
+//                            .requestMatchers("/api/v1/pubview-news/**").permitAll() // fixed pattern here
+//                            .requestMatchers("/api/v1/lic-news/**\").permitAll()\n" + ".requestMatchers(\"/api/v1/news/views/**").permitAll() // fixed pattern here
+//                            .requestMatchers("/api/v1/news/comments/pending").hasRole("ADMIN")
+//                            .requestMatchers("/api/v1/news/comments/all").hasRole("ADMIN")
+//                            .requestMatchers("/api/v1/delete-comment").hasRole("ADMIN")
+//                            .requestMatchers("/api/v1/news/comment/{action}/{commentID}").hasRole("ADMIN")
+//                            .requestMatchers("/api/v1/user-delete-comment/**").permitAll() // fixed pattern here
+//                            .requestMatchers("/api/v1/comment-news/**").permitAll() // fixed pattern here
+//                            .requestMatchers("/api/v1/comment-reply/**").permitAll() // fixed pattern here
+//                            .requestMatchers("/api/v1/news/comments/**").permitAll() // fixed pattern here
+//                            .requestMatchers("/api/v1/news").hasAnyRole("ADMIN", "AUTHOR")
+//                            .requestMatchers("/api/v1/AInews").hasAnyRole("ADMIN", "AUTHOR")
+//                            .requestMatchers("/api/v1/user/**").hasRole("ADMIN")
+//                            .requestMatchers("/api/facebook/post/**").hasRole("ADMIN")
+//                            .requestMatchers("/api/v1/news/rejected").hasRole("ADMIN")
+//                            .requestMatchers("/api/v1/news/reject").hasRole("ADMIN")
+//                            .requestMatchers("/api/v1/news/approved/comments/**").permitAll()
+//                            .requestMatchers("/api/v1/approved/news").hasRole("ADMIN")
+//                            .requestMatchers("/api/v1/approve/news").hasRole("ADMIN")
+//                            .requestMatchers("/api/v1/pending/news").hasRole("ADMIN")
+//                            .requestMatchers("/api/v1/news/notifications/**").hasRole("AUTHOR")
+                            .anyRequest().permitAll()
             );
 
     // Define your custom authentication provider if needed
