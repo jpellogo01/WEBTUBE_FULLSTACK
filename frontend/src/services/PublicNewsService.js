@@ -3,16 +3,15 @@ import axios from 'axios';
 const NEWS_API_BASE_URL2 = "http://localhost:8080/api/v1/public-news";
 const NEWS_API_BASE_URL3 = "http://localhost:8080/api/v1";
 
-
-class PublicNewService {
-    getAllPublicNews(){
+class PublicNewsService {
+    getAllPublicNews() {
         return axios.get(NEWS_API_BASE_URL2);
     }
-    getPublicNewsById(newsId){
+
+    getPublicNewsById(newsId) {
         return axios.get(`${NEWS_API_BASE_URL2}/${newsId}`);
     }
 
-      // ✅ New method for raw content submission
     submitRawContent(formData) {
         return axios.post(`${NEWS_API_BASE_URL3}/news-contribute`, formData, {
             headers: {
@@ -20,7 +19,8 @@ class PublicNewService {
             }
         });
     }
-
 }
 
-export default new PublicNewService();
+// ✅ Name the instance before exporting it
+const publicNewsService = new PublicNewsService();
+export default publicNewsService;

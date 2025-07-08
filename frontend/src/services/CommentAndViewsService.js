@@ -125,4 +125,5 @@ class CommentAndViewsService {
 
 
 
-export default new CommentAndViewsService();
+const commentAndViewsService = new CommentAndViewsService();
+export default commentAndViewsService;

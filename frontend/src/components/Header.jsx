@@ -3,18 +3,26 @@ import { NavLink } from 'react-router-dom';
 import webtubelogo from '../image/webtubelogo.jfif';
 
 const Header2 = () => {
-
-
     const [collapsed, setCollapsed] = useState(true);
 
     const toggleNavbar = () => {
         setCollapsed(!collapsed);
     };
 
-
+    const menuItems = [
+        { to: "/Balitaraneta", label: "BalitAraneta" },
+        { to: "/animo-idol", label: "Animo Idol" },
+        { to: "/animo-in-demand", label: "Animo InDemand" },
+        { to: "/lassalian-tambayan", label: "Lasallian Tambayan" },
+        { to: "/proud-lasallian", label: "Proud Lasallian" },
+        { to: "/info-talk", label: "DLSAU InfoTalk" },
+        { to: "/testimonials", label: "The DLSAU Testimonials" },
+        { to: "/galing-araneta", label: "Galing Araneta" },
+        { to: "/animo-model", label: "Animo Model" }
+    ];
 
     return (
-        <nav className="navbar navbar-expand-lg navbar-dark" style={{ backgroundColor: '#006747' }} fixed-top>
+        <nav className="navbar navbar-expand-lg navbar-dark fixed-top" style={{ backgroundColor: '#006747' }}>
             <div className="container">
                 <NavLink className="navbar-brand" to="/">
                     <img src={webtubelogo} alt="WEBTUBE" className="brand-logo" />
@@ -23,47 +31,33 @@ const Header2 = () => {
                     className="navbar-toggler"
                     type="button"
                     onClick={toggleNavbar}
-                    aria-expanded={!collapsed ? true : false}
+                    aria-expanded={!collapsed}
                 >
-                    <span className="navbar-toggler-icon"></span>
+                    <div className={`custom-toggler ${!collapsed ? 'open' : ''}`}>
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
                 </button>
+
                 <div className={`${collapsed ? 'collapse' : ''} navbar-collapse`} id="navbarNav">
-                    <NavLink className="nav-link" to="/" onClick={() => setCollapsed(true)}> {/* Add this NavLink */}
-                        <span className="navbar-title">THE DLSAU WEBTUBE</span> {/* Use a span element */}
+                    <NavLink className="nav-link text-white w-100 text-center mb-2" to="/" onClick={() => setCollapsed(true)}>
+                        <span className="navbar-title">THE DLSAU WEB-TUBE</span>
                     </NavLink>
-                    <ul className="navbar-nav ml-auto">
-                        <li className="nav-item">
-                            <NavLink className="nav-link" to="/Balitaraneta">BalitAraneta</NavLink>
-                        </li>
-                        <li className="nav-item">
-                            <NavLink className="nav-link" to="/animo-idol">Animo Idol</NavLink>
-                        </li>
-                        <li className="nav-item">
-                            <NavLink className="nav-link" to="/animo-in-demand">Animo In-Demand</NavLink>
-                        </li>
-                        <li className="nav-item">
-                            <NavLink className="nav-link" to="/lassalian-tambayan">Lasallian Tambayan</NavLink>
-                        </li>
-                        <li className="nav-item">
-                            <NavLink className="nav-link" to="/proud-lasallian">Proud Lasallian</NavLink>
-                        </li>
-                         <li className="nav-item">
-                            <NavLink className="nav-link" to="/info-talk">The DLSAU InfoTalk</NavLink>
-                        </li>
-                         <li className="nav-item">
-                            <NavLink className="nav-link" to="/testimonials">The DLSAU Testimonials</NavLink>
-                        </li>
-                         <li className="nav-item">
-                            <NavLink className="nav-link" to="/galing-araneta">Galing Araneta, Galing Araneta</NavLink>
-                        </li>
-                         <li className="nav-item">
-                            <NavLink className="nav-link" to="/animo-model">Animo Model</NavLink>
-                        </li>
+
+                    <ul className="navbar-nav nav-two-rows">
+                        {menuItems.map((item, idx) => (
+                            <li className="nav-item" key={idx}>
+                                <NavLink className="nav-link small-nav-link" to={item.to} onClick={() => setCollapsed(true)}>
+                                    {item.label}
+                                </NavLink>
+                            </li>
+                        ))}
                     </ul>
                 </div>
             </div>
         </nav>
     );
-}
+};
 
 export default Header2;

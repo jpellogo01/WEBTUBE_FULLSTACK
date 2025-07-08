@@ -24,4 +24,5 @@ class AdminApprovalService {
     }
 }
 
-export default new AdminApprovalService();
+const adminApprovalService = new AdminApprovalService();
+export default adminApprovalService;

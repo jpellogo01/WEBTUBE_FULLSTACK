@@ -16,7 +16,7 @@ const AddUserComponent = () => {
         password: '',
         email: '',
         role: '',
-        roles: ['ROLE_AUTHOR', 'ROLE_ADMIN'], // Role options
+        roles: ['admin', 'author'], // Role options
     });
 
     const [loading, setLoading] = useState(false); // New state for loading
@@ -32,7 +32,7 @@ const AddUserComponent = () => {
                     password: '*****',
                     email: user.email,
                     role: user.role,
-                    roles: ['ROLE_AUTHOR', 'ROLE_ADMIN'], // Ensure roles remain intact
+                    roles: ['admin', 'author'], // Ensure roles remain intact
                 });
             });
         }

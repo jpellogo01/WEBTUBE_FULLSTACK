@@ -270,3 +270,33 @@ code {
   border-color: #006400;
 }
 
+
+.custom-toggler {
+  width: 30px;
+  height: 24px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: pointer;
+}
+
+.custom-toggler span {
+  display: block;
+  height: 4px;
+  background-color: white;
+  border-radius: 2px;
+  transition: 0.3s;
+}
+
+.custom-toggler.open span:nth-child(1) {
+  transform: rotate(45deg) translate(5px, 5px);
+}
+
+.custom-toggler.open span:nth-child(2) {
+  opacity: 0;
+}
+
+.custom-toggler.open span:nth-child(3) {
+  transform: rotate(-45deg) translate(5px, -11px);
+}

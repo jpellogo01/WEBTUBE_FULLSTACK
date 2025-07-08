@@ -118,7 +118,7 @@ class NewHomePage extends Component {
                     display: showHeader ? 'block' : 'none'
                 }} />
 
-                <div className="container" style={{ marginTop: '10px' }}>
+                <div className="container" style={{ marginTop: '110px' }}>
                     <div className="row" style={{
                         maxHeight: 'calc(100vh - 60px)',
                         overflowY: 'auto',
