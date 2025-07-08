@@ -2,6 +2,7 @@ package com.Webtube.site.Controller;
 
 import com.Webtube.site.Model.Comment;
 import com.Webtube.site.Model.News;
+import com.Webtube.site.Repository.CommentRepository;
 import com.Webtube.site.payload.request.NewsApprovalRequest;
 import com.Webtube.site.payload.response.CommentWithNewsDTO;
 import com.Webtube.site.Service.AdminApprovalService;
@@ -19,6 +20,8 @@ public class AdminApprovalController {
     @Autowired
     private AdminApprovalService adminApprovalService;
 
+    @Autowired
+    CommentRepository commentRepository;
     @GetMapping("pending/news")
     public ResponseEntity<List<News>> getAllPendingNews() {
         return ResponseEntity.ok(adminApprovalService.getAllPendingNews());
@@ -65,4 +68,5 @@ public class AdminApprovalController {
                                                  @PathVariable String action) {
         return adminApprovalService.handleCommentAction(commentID, action);
     }
+
 }

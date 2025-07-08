@@ -106,4 +106,17 @@ public class NewsController {
         newsService.deleteNews(newsId);
         return ResponseEntity.ok("News, along with its comments and views, has been deleted successfully.");
     }
+    @GetMapping("/news/search")
+    public ResponseEntity<List<News>> searchNews(@RequestParam("query") String query) {
+        List<News> results = newsService.searchNews(query);
+        return ResponseEntity.ok(results);
+    }
+
+    @GetMapping("/news/fuzzy-search")
+    public ResponseEntity<List<News>> fuzzySearch(@RequestParam("query") String query) {
+        List<News> results = newsService.fuzzySearchNews(query);
+        return ResponseEntity.ok(results);
+    }
+
+
 }

@@ -26,4 +26,10 @@ public interface NewsService {
                     String embedYoutubeUrl, MultipartFile[] additionalPhotos, List<String> removedPhotos);
 
     void deleteNews(Long newsId);
+    public List<News> searchNews(String query);
+    List<News> fuzzySearchNews(String query);
+
+
+
+
 }

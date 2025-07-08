@@ -32,6 +32,7 @@ public class ViewAndCommentController {
         return viewAndCommentService.addComment(newsId, parentId, visitorId, comment);
     }
 
+
     // ✅ Delete a comment (admin use)
     @DeleteMapping("/delete-comment/{commentId}")
     public ResponseEntity<?> deleteComment(@PathVariable Long commentId) {

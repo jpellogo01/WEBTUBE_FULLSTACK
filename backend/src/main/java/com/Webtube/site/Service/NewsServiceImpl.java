@@ -5,6 +5,7 @@ import com.Webtube.site.Model.News;
 import com.Webtube.site.Repository.*;
 import com.Webtube.site.Service.NewsService;
 import jakarta.transaction.Transactional;
+import org.apache.commons.text.similarity.LevenshteinDistance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,6 +19,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Service
 public class NewsServiceImpl implements NewsService {
@@ -238,6 +240,47 @@ public class NewsServiceImpl implements NewsService {
         viewRepository.deleteByNewsId(newsId);
         newsRepository.delete(news);
     }
+
+    @Override
+    public List<News> searchNews(String query) {
+        return newsRepository.findByTitleContainingIgnoreCaseOrContentContainingIgnoreCase(query, query);
+    }
+
+    @Override
+    public List<News> fuzzySearchNews(String query) {
+        List<News> allNews = newsRepository.findAll();
+        LevenshteinDistance distance = new LevenshteinDistance();
+        String q = query.toLowerCase();
+
+        return allNews.stream()
+                .filter(news -> {
+                    return fuzzyMatch(news.getTitle(), q, distance)
+                            || fuzzyMatch(news.getContent(), q, distance)
+                            || fuzzyMatch(news.getAuthor(), q, distance);
+                })
+                .collect(Collectors.toList());
+    }
+
+    // Helper method
+    private boolean fuzzyMatch(String text, String query, LevenshteinDistance distance) {
+        if (text == null) return false;
+
+        text = text.toLowerCase();
+        String[] words = text.split("\\s+");
+
+        for (String word : words) {
+            // Strip punctuation like periods, commas, etc.
+            word = word.replaceAll("[^a-zA-Z0-9]", "");
+            if (distance.apply(word, query) <= 2) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+
+
 
     private String callOpenAI(String prompt) {
         String apiUrl = "https://api.openai.com/v1/chat/completions";
