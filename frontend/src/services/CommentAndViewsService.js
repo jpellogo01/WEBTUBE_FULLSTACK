@@ -18,14 +18,14 @@ class CommentAndViewsService {
                 console.error("There was an error fetching pending comments!", error);
                 throw error;
             });
-    }
+    }s
 
 
     // ✅ 2. Approve a comment
     approveComment(commentID) {
         const token = localStorage.getItem('token');
 
-        return axios.put(`${NEWS_API_BASE_URL2}/approve-comment/${commentID}`, {}, {
+        return axios.post(`${NEWS_API_BASE_URL}/comment/approve/${commentID}`, {}, {
             headers: {
                 Authorization: `Bearer ${token}`,
             }

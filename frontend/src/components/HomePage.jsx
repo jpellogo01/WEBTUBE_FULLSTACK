@@ -9,6 +9,8 @@ class NewHomePage extends Component {
         super(props);
         this.state = {
             newsList: [],
+            filteredNews: [],
+            searchQuery: '',
             showFooter: false,
             showHeader: true,
             lastScrollTop: 0,
@@ -31,12 +33,38 @@ class NewHomePage extends Component {
         PublicNewsService.getAllPublicNews()
             .then(res => {
                 const sortedNewsList = res.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-                this.setState({ newsList: sortedNewsList });
+                this.setState({ newsList: sortedNewsList, filteredNews: sortedNewsList });
             })
             .catch(error => {
                 console.error('Error fetching news:', error);
             });
     }
+
+    handleSearchInputChange = (e) => {
+        this.setState({ searchQuery: e.target.value });
+    };
+
+    handleSearchSubmit = (e) => {
+        e.preventDefault();
+        const { searchQuery } = this.state;
+
+        if (searchQuery.trim() === '') {
+            // If input is empty, show all news again
+            this.setState({ filteredNews: this.state.newsList });
+            return;
+        }
+
+        // Fetch from backend
+        axios.get(`http://localhost:8080/api/v1/news/fuzzy-search?query=${encodeURIComponent(searchQuery)}`)
+            .then(res => {
+                const sorted = res.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                this.setState({ filteredNews: sorted });
+            })
+            .catch(err => {
+                console.error("Search error:", err);
+                this.setState({ filteredNews: [] });
+            });
+    };
 
     handleScroll() {
         const windowHeight = window.innerHeight;
@@ -71,41 +99,41 @@ class NewHomePage extends Component {
         return new Date(dateString).toLocaleDateString('en-US', options);
     }
 
-   getViewerIp = async () => {
-    try {
-        const response = await fetch('https://api.ipify.org?format=json');
-        if (!response.ok) throw new Error('IP fetch failed');
-        const data = await response.json();
-        return data.ip;
-    } catch (error) {
-        console.error('Failed to fetch IP:', error);
-        return 'unknown';
-    }
-};
+    getViewerIp = async () => {
+        try {
+            const response = await fetch('https://api.ipify.org?format=json');
+            if (!response.ok) throw new Error('IP fetch failed');
+            const data = await response.json();
+            return data.ip;
+        } catch (error) {
+            console.error('Failed to fetch IP:', error);
+            return 'unknown';
+        }
+    };
 
 
     openModal = (news) => {
-    // Immediately show the modal
-    this.setState({ selectedNews: news, showModal: true });
+        // Immediately show the modal
+        this.setState({ selectedNews: news, showModal: true });
 
-    // Then fetch IP and track view in the background
-    this.getViewerIp().then(viewerIp => {
-        axios.post(`http://localhost:8080/api/v1/view-news/${news.id}?viewerIp=${viewerIp}`)
-            .then(() => {
-                console.log('View tracked successfully');
-            })
-            .catch(err => {
-                console.error('Failed to track view:', err);
-            });
-    });
-};
+        // Then fetch IP and track view in the background
+        this.getViewerIp().then(viewerIp => {
+            axios.post(`http://localhost:8080/api/v1/view-news/${news.id}?viewerIp=${viewerIp}`)
+                .then(() => {
+                    console.log('View tracked successfully');
+                })
+                .catch(err => {
+                    console.error('Failed to track view:', err);
+                });
+        });
+    };
 
     closeModal = () => {
         this.setState({ showModal: false, selectedNews: null });
     }
 
     render() {
-        const { newsList, showHeader, showModal, selectedNews } = this.state;
+        const { showHeader, showModal, selectedNews } = this.state;
 
         return (
             <div style={{ position: 'relative' }}>
@@ -119,13 +147,48 @@ class NewHomePage extends Component {
                 }} />
 
                 <div className="container" style={{ marginTop: '110px' }}>
+                    <form className="mb-4 d-flex justify-content-center" onSubmit={this.handleSearchSubmit}>
+                        <div style={{ display: 'flex', maxWidth: '400px', width: '100%' }}>
+                            <input
+                                type="text"
+                                className="form-control"
+                                placeholder="Search..."
+                                style={{
+                                    borderRadius: '0.375rem 0 0 0.375rem', // round left only
+                                    borderRight: 'none',
+                                }}
+                                value={this.state.searchQuery}
+                                onChange={this.handleSearchInputChange}
+                            />
+                            <button
+                                type="submit"
+                                className="btn btn-success"
+                                style={{
+                                    borderRadius: '0 0.375rem 0.375rem 0', // round right only
+                                    padding: '6px 16px',
+                                    whiteSpace: 'nowrap',
+                                }}
+                            >
+                                Search
+                            </button>
+                        </div>
+                    </form>
+
+
+
                     <div className="row" style={{
                         maxHeight: 'calc(100vh - 60px)',
                         overflowY: 'auto',
                         scrollbarWidth: 'none',
                         msOverflowStyle: 'none'
                     }}>
-                        {newsList.map(news => (
+                        {this.state.filteredNews.length === 0 && (
+                            <div className="col-12 text-center text-muted">
+                                No news found for "{this.state.searchQuery}"
+                            </div>
+                        )}
+
+                        {this.state.filteredNews.map(news => (
                             <div key={news.id} className="col-md-4 mb-4">
                                 <div
                                     className="card h-100 clickable-card"
