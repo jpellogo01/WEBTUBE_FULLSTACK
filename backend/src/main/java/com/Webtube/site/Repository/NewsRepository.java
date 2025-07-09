@@ -17,6 +17,7 @@ public interface NewsRepository extends JpaRepository<News, Long> {
     List<News> findByStatusAndPublicationDateBefore(@Param("status") String status, @Param("currentTime") Date currentTime);
     Optional<News> findByIdAndStatus(Long id, String status);
     List<News> findByTitleContainingIgnoreCaseOrContentContainingIgnoreCase(String title, String content);
+    List<News> findByPublicationDateBetween(Date start, Date end);
 
 
 }

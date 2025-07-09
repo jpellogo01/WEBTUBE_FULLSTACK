@@ -20,4 +20,6 @@ public interface ContributedNewsService {
     ResponseEntity<ContributedNews> getContribution(Long id);
 
     ResponseEntity<Void> deleteContribution(Long id);
+    List<ContributedNews> fuzzySearchContributions(String query);
+
 }

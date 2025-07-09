@@ -28,6 +28,9 @@ public interface NewsService {
     void deleteNews(Long newsId);
     public List<News> searchNews(String query);
     List<News> fuzzySearchNews(String query);
+    List<News> searchByMonth(int month, int year);
+
+
 
 
 

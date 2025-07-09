@@ -14,4 +14,8 @@ public interface UserService {
     ResponseEntity<?> getUserById(Long id);
     ResponseEntity<?> updateUser(Long id, SignupRequest updateRequest);
     ResponseEntity<?> deleteUser(Long id);
+
+    ResponseEntity<?> searchUsers(String query);
+
 }
+

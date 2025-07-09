@@ -43,4 +43,9 @@ public class ContributedNewsController {
     public ResponseEntity<Void> deleteContribution(@PathVariable Long id) {
         return contributedNewsService.deleteContribution(id);
     }
+    @GetMapping("/contribute-news/fuzzy-search")
+    public ResponseEntity<List<ContributedNews>> fuzzySearchContributions(@RequestParam("query") String query) {
+        List<ContributedNews> results = contributedNewsService.fuzzySearchContributions(query);
+        return ResponseEntity.ok(results);
+    }
 }

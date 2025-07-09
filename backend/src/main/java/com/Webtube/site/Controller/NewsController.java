@@ -118,5 +118,13 @@ public class NewsController {
         return ResponseEntity.ok(results);
     }
 
+    @GetMapping("news/search-by-month")
+    public ResponseEntity<List<News>> searchByMonth(
+            @RequestParam("month") int month, // 1 for January, 12 for December
+            @RequestParam("year") int year
+    ) {
+        List<News> results = newsService.searchByMonth(month, year);
+        return ResponseEntity.ok(results);
+    }
 
 }

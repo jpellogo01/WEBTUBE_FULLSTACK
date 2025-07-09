@@ -261,23 +261,48 @@ public class NewsServiceImpl implements NewsService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public List<News> searchByMonth(int month, int year) {
+        // Build start and end date range
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.YEAR, year);
+        calendar.set(Calendar.MONTH, month - 1); // Calendar.MONTH is 0-based
+        calendar.set(Calendar.DAY_OF_MONTH, 1);
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        Date startDate = calendar.getTime();
+
+        calendar.add(Calendar.MONTH, 1); // go to next month
+        Date endDate = calendar.getTime();
+
+        return newsRepository.findByPublicationDateBetween(startDate, endDate);
+    }
+
     // Helper method
     private boolean fuzzyMatch(String text, String query, LevenshteinDistance distance) {
         if (text == null) return false;
 
         text = text.toLowerCase();
+        query = query.toLowerCase();
+
+        // Exact match first
+        if (text.contains(query)) return true;
+
         String[] words = text.split("\\s+");
 
         for (String word : words) {
-            // Strip punctuation like periods, commas, etc.
-            word = word.replaceAll("[^a-zA-Z0-9]", "");
-            if (distance.apply(word, query) <= 2) {
+            word = word.replaceAll("[^a-zA-Z0-9]", ""); // remove punctuation
+
+            // Only apply fuzzy match for longer words
+            if (word.length() >= 4 && distance.apply(word, query) <= 1) {
                 return true;
             }
         }
 
         return false;
     }
+
 
 
 

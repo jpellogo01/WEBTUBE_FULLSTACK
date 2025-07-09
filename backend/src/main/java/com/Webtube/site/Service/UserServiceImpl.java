@@ -136,6 +136,21 @@ public class UserServiceImpl implements UserService {
                 .body(new MessageResponse("Error: User not found.")));
     }
 
+    @Override
+    public ResponseEntity<?> searchUsers(String query) {
+        String lowercaseQuery = query.toLowerCase();
+
+        List<Users> allUsers = usersRepository.findAll();
+
+        List<Users> matchedUsers = allUsers.stream()
+                .filter(user -> user.getFullname() != null &&
+                        user.getFullname().toLowerCase().contains(lowercaseQuery))
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(matchedUsers);
+    }
+
+
     private Set<Role> resolveRoles(Set<String> strRoles) {
         Set<Role> roles = new HashSet<>();
         if (strRoles == null || strRoles.isEmpty()) {

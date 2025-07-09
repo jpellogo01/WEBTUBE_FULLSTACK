@@ -3,6 +3,7 @@ package com.Webtube.site.Service.ServiceImpl;
 import com.Webtube.site.Model.ContributedNews;
 import com.Webtube.site.Repository.ContributedNewsRepository;
 import com.Webtube.site.Service.ContributedNewsService;
+import org.apache.commons.text.similarity.LevenshteinDistance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ContributedNewsServiceImpl implements ContributedNewsService {
@@ -80,4 +82,39 @@ public class ContributedNewsServiceImpl implements ContributedNewsService {
             return ResponseEntity.notFound().build();
         }
     }
+
+    @Override
+    public List<ContributedNews> fuzzySearchContributions(String query) {
+        List<ContributedNews> allNews = contributedNewsRepository.findAll();
+        LevenshteinDistance distance = new LevenshteinDistance();
+
+        String lowerQuery = query.toLowerCase();
+
+        return allNews.stream()
+                .filter(news -> {
+                    String content = news.getContent() != null ? news.getContent().toLowerCase() : "";
+                    String author = news.getAuthor() != null ? news.getAuthor().toLowerCase() : "";
+                    String category = news.getCategory() != null ? news.getCategory().toLowerCase() : "";
+
+                    // Split into words for fuzzy matching
+                    String[] contentWords = content.split("\\s+");
+                    String[] authorWords = author.split("\\s+");
+                    String[] categoryWords = category.split("\\s+");
+
+                    return containsFuzzyMatch(contentWords, lowerQuery, distance)
+                            || containsFuzzyMatch(authorWords, lowerQuery, distance)
+                            || containsFuzzyMatch(categoryWords, lowerQuery, distance);
+                })
+                .collect(Collectors.toList());
+    }
+
+    private boolean containsFuzzyMatch(String[] words, String query, LevenshteinDistance distance) {
+        for (String word : words) {
+            if (distance.apply(word, query) <= 2) { // tolerance of 2
+                return true;
+            }
+        }
+        return false;
+    }
+
 }
