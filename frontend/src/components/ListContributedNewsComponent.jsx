@@ -11,6 +11,8 @@ class ListContributedNewsComponent extends React.Component {
         this.state = {
             contributedNews: [],
             loading: true,
+            searchQuery: "", // added
+
         };
     }
 
@@ -47,6 +49,29 @@ class ListContributedNewsComponent extends React.Component {
         this.props.history.push(`/ReadContributeContent/${id}`);
     };
 
+    handleSearchChange = (event) => {
+        this.setState({ searchQuery: event.target.value });
+    };
+
+    searchContributedNews = async () => {
+        const { searchQuery } = this.state;
+        if (searchQuery.trim() === "") {
+            this.fetchContributedNews(); // reload all if query is empty
+            return;
+        }
+
+        try {
+            const response = await axios.get("http://localhost:8080/api/v1/contribute-news/fuzzy-search", {
+                params: { query: searchQuery }
+            });
+            this.setState({ contributedNews: response.data, loading: false });
+        } catch (error) {
+            console.error("Error searching contributed news:", error);
+            this.setState({ contributedNews: [], loading: false });
+        }
+    };
+
+
     render() {
         return (
             <Box sx={{ display: "flex" }}>
@@ -54,6 +79,20 @@ class ListContributedNewsComponent extends React.Component {
                 <Box sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
                     <HeaderComponent />
                     <Box sx={{ padding: "20px", marginTop: "50px" }}>
+                        <Box sx={{ display: "flex", marginBottom: "15px" }}>
+                            <input
+                                type="text"
+                                placeholder="Search by Name, Email or Content"
+                                value={this.state.searchQuery}
+                                onChange={this.handleSearchChange}
+                                className="searchInput"
+                                style={{ marginRight: "10px", maxWidth: "300px", flex: "none" }}
+                            />
+                            <button className="bntAction" onClick={this.searchContributedNews}>
+                                Search
+                            </button>
+                        </Box>
+
                         <div className="row scrollable-div">
                             <table className="table table-striped table-bordered">
                                 <thead>

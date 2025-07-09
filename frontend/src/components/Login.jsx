@@ -26,39 +26,39 @@ function Login({ onLogin }) {
 
     async function login(event) {
         event.preventDefault();
-    
+
         // Reset previous error messages
         setUsernameError("");
         setPasswordError("");
-    
+
         // Validation for username
         if (!username) {
             setUsernameError("Username is required");
             return;
         }
-      
-    
+
+
         // Validation for password
         if (!password) {
             setPasswordError("Password is required");
             return;
         }
-    
+
         try {
             const response = await axios.post("http://localhost:8080/api/v1/login", {
                 username: username,
                 password: password,
             });
-        
+
             if (response.status === 200) {
                 // Log the entire response for debugging
                 console.log('API response:', response.data);
-        
+
                 const { accessToken, roles, username, email, fullname } = response.data;
-        
+
                 // Assume the user is authenticated successfully
                 const role = roles.includes("ROLE_ADMIN") ? "ADMIN" : roles.includes("ROLE_AUTHOR") ? "AUTHOR" : "USER";
-        
+
                 // Store information in local storage
                 localStorage.setItem('token', accessToken);
                 localStorage.setItem('role', role);
@@ -66,7 +66,7 @@ function Login({ onLogin }) {
                 localStorage.setItem('email', email);
                 localStorage.setItem('fullname', fullname);
 
-        
+
                 // Call onLogin and navigate to the appropriate page based on role
                 onLogin(accessToken, role);
                 if (role === "ADMIN") {
@@ -84,8 +84,8 @@ function Login({ onLogin }) {
                 setPasswordError("Invalid username or password");
             }
         }
-        
-        
+
+
     }
 
     function handleSuggestionClick(username) {
@@ -96,13 +96,27 @@ function Login({ onLogin }) {
     }
 
     return (
-        <div className="login-container">
+        <div className="login-container" style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            minHeight: "70vh",
+            backgroundColor: "#f0f2f5"
+        }}>
             <div className="login-content">
-                <div className="card1">
+                <div className="card1" style={{
+                    width: "100%",
+                    maxWidth: "400px",
+                    margin: "0 auto",
+                    padding: "20px",
+                    borderRadius: "8px",
+                    background: "#fff",
+                    boxShadow: "0px 0px 15px rgba(0,0,0,0.1)"
+                }}>
                     <div className="card-body">
-                        <h2 className="card-title text-center mb-4">Login</h2>
+                        <h2 className="text-center mb-4">Login</h2>
                         <form onSubmit={login}>
-                        <div className="form-group">
+                            <div className="form-group mb-3">
                                 <label>Username</label>
                                 <input
                                     type="text"
@@ -124,7 +138,7 @@ function Login({ onLogin }) {
                                     </ul>
                                 )}
                             </div>
-                            <div className="form-group">
+                            <div className="form-group mb-3">
                                 <label>Password</label>
                                 <input
                                     type="password"
@@ -136,15 +150,16 @@ function Login({ onLogin }) {
                                 />
                                 {passwordError && <div className="text-danger">{passwordError}</div>}
                             </div>
-                            <button type="submit" className="btn btn-primary btn-block">Login</button>
+                            <button type="submit" className="btn btn-primary w-100">Login</button>
                         </form>
                     </div>
                 </div>
+                <footer className="custom-footer" style={{ textAlign: "center", marginTop: "20px" }}>
+                    <p>2024 WebTube. All rights reserved.</p>
+                </footer>
             </div>
-            <footer className="custom-footer">
-                <p> 2024 WebTube. All rights reserved.</p>
-            </footer>
         </div>
+
     );
 }
 

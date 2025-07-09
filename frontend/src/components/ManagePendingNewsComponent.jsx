@@ -164,22 +164,6 @@ class PendingNewsComponent extends React.Component {
           <HeaderComponent />
           <Box sx={{ padding: "20px", marginTop: "70px" }}>
             <div>
-              <input
-                type="text"
-                placeholder="Search by Title, Description, Author"
-                value={this.state.searchQuery}
-                onChange={this.handleSearchChange}
-                className="searchInput"
-                style={{ marginBottom: "10px", width: "300px" }}
-              />
-              <input
-                type="date"
-                value={this.state.searchDate}
-                onChange={this.handleDateChange}
-                className="dateInput"
-                style={{ marginLeft: "10px", marginBottom: "10px" }}
-              />
-              <br />
               <div className="row scrollable-div">
                 <table className="table table-striped table-bordered">
                   <thead>

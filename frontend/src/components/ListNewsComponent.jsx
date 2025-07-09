@@ -11,10 +11,10 @@ class ListNewsComponent extends React.Component {
         this.state = {
             news: [],
             loading: true,
-            userFullName: "",  // Store the full name of the logged-in user
-            userRole: "",      // Store the role of the logged-in user
-            searchQuery: "",   // Store search query for title, description, etc.
-            searchDate: "",    // Store selected date range
+            userFullName: "",
+            userRole: "",
+            searchQuery: "",
+            searchDate: "",
         };
 
         this.addNews = this.addNews.bind(this);
@@ -24,10 +24,9 @@ class ListNewsComponent extends React.Component {
         this.handleDateChange = this.handleDateChange.bind(this);
     }
 
-    // Fetch news data and user info on component mount
     componentDidMount() {
         this.fetchNews();
-        this.fetchUserInfo();  // Fetch user info
+        this.fetchUserInfo();
     }
 
     fetchUserInfo = () => {
@@ -36,80 +35,64 @@ class ListNewsComponent extends React.Component {
         this.setState({ userFullName: userFullName || "", userRole: userRole || "" });
     };
 
-    // fetchNews = async () => {
-    //     try {
-    //         const token = localStorage.getItem("token");
-    //         const response = await axios.get("http://localhost:8081/api/v1/news", {
-    //             headers: {
-    //                 Authorization: `Bearer ${token}`,
-    //             },
-    //         });
-
-    //         const filteredNews = this.filterNews(response.data).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)); // Filter news based on search criteria
-    //         this.setState({ news: filteredNews, loading: false });
-    //     } catch (error) {
-    //         console.error("Error fetching news data:", error);
-    //         this.setState({ news: [], loading: false });
-    //     }
-    // };
-
     fetchNews = async () => {
-    try {
-        const token = localStorage.getItem("token");
-        const response = await axios.get("http://localhost:8080/api/v1/news", {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
+        try {
+            const token = localStorage.getItem("token");
+            const response = await axios.get("http://localhost:8080/api/v1/news", {
+                headers: { Authorization: `Bearer ${token}` },
+            });
 
-        // Filter for both Pending and Approved status
-        const filteredNews = response.data
-            .filter(news => news.status === "Pending" || news.status === "Approved")
-            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            const filteredNews = response.data
+                .filter(news => news.status === "Pending" || news.status === "Approved")
+                .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-        this.setState({ news: filteredNews, filteredNews, loading: false });
-    } catch (error) {
-        console.error("Error fetching news data:", error);
-        this.setState({ news: [], filteredNews: [], loading: false });
-    }
-};
-
-
-    // Filter news based on search query and date
-    filterNews = (newsData) => {
-        const { searchQuery, searchDate, userRole, userFullName } = this.state;
-
-        return newsData.filter((newsItem) => {
-            const matchesSearchQuery =
-                newsItem.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                newsItem.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                newsItem.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                newsItem.status.toLowerCase().includes(searchQuery.toLowerCase());
-
-            const matchesDate =
-                searchDate ? new Date(newsItem.publicationDate).toLocaleDateString() === new Date(searchDate).toLocaleDateString() : true;
-
-            if (userRole === "AUTHOR") {
-                return matchesSearchQuery && matchesDate && newsItem.author === userFullName;
-            }
-
-            return matchesSearchQuery && matchesDate;
-        });
+            this.setState({ news: filteredNews, loading: false });
+        } catch (error) {
+            console.error("Error fetching news data:", error);
+            this.setState({ news: [], filteredNews: [], loading: false });
+        }
     };
 
-    // Handle search query change
+    fuzzySearchNews = async (query) => {
+        try {
+            const token = localStorage.getItem("token");
+            const response = await axios.get(`http://localhost:8080/api/v1/news/fuzzy-search`, {
+                headers: { Authorization: `Bearer ${token}` },
+                params: { query }
+            });
+
+            const filteredNews = response.data
+                .filter(news => news.status === "Pending" || news.status === "Approved")
+                .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+            this.setState({ news: filteredNews, loading: false });
+        } catch (error) {
+            console.error("Error performing fuzzy search:", error);
+            this.setState({ news: [], loading: false });
+        }
+    };
+
+    // Update only the search query in state
     handleSearchChange(event) {
-        const searchQuery = event.target.value;
-        this.setState({ searchQuery }, () => {
-            this.fetchNews(); // Re-fetch news based on new search query
-        });
+        this.setState({ searchQuery: event.target.value });
     }
 
-    // Handle date change for search
+    // New method to handle search button click
+    searchNews = () => {
+        const { searchQuery } = this.state;
+        if (searchQuery.trim() === "") {
+            // If query is empty, reload all news
+            this.fetchNews();
+        } else {
+            // Perform fuzzy search with the query
+            this.fuzzySearchNews(searchQuery);
+        }
+    };
+
     handleDateChange(event) {
         const searchDate = event.target.value;
         this.setState({ searchDate }, () => {
-            this.fetchNews(); // Re-fetch news based on new date
+            this.fetchNews();
         });
     }
 
@@ -150,16 +133,17 @@ class ListNewsComponent extends React.Component {
                                 value={this.state.searchQuery}
                                 onChange={this.handleSearchChange}
                                 className="searchInput"
-                                style={{ marginRight: "10px" }} // To give some space between input fields
+                                style={{ marginRight: "10px" }}
                             />
-                            <input
-                                type="date"
-                                value={this.state.searchDate}
-                                onChange={this.handleDateChange}
-                                className="dateInput"
-                                style={{ marginRight: "10px" }} // To give some space between input fields
-                            />
-                            <button className="bntAction" onClick={this.addNews}>
+                            <button
+                                className="bntAction"
+                                onClick={this.searchNews}
+                                disabled={!this.state.searchQuery.trim()}
+                            >
+                                Search
+                            </button>
+
+                            <button className="bntAction" onClick={this.addNews} style={{ marginLeft: "10px" }}>
                                 Add News
                             </button>
                         </Box>
@@ -218,7 +202,6 @@ class ListNewsComponent extends React.Component {
                                                     >
                                                         Delete
                                                     </button>
-
                                                     <button
                                                         style={{ marginLeft: "10px" }}
                                                         onClick={() => this.viewNews(news.id)}
@@ -242,7 +225,6 @@ class ListNewsComponent extends React.Component {
                     </Box>
                 </Box>
             </Box>
-
         );
     }
 }

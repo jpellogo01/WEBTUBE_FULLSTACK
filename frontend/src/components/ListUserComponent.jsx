@@ -13,7 +13,9 @@ class ListUserComponent extends React.Component {
     super(props);
 
     this.state = {
-      users: []
+      users: [],
+      searchQuery: ""
+
     };
 
     this.addUser = this.addUser.bind(this);
@@ -53,6 +55,33 @@ class ListUserComponent extends React.Component {
     this.fetchUsers();
   }
 
+  handleSearchChange = (event) => {
+    this.setState({ searchQuery: event.target.value });
+  };
+
+  searchUsers = async () => {
+    const { searchQuery } = this.state;
+    const token = localStorage.getItem("token");
+
+    if (!searchQuery.trim()) {
+      this.fetchUsers(); // fallback to all users
+      return;
+    }
+
+    try {
+      const response = await axios.get(`http://localhost:8080/api/v1/user/search`, {
+        headers: { Authorization: `Bearer ${token}` },
+        params: { query: searchQuery }
+      });
+
+      this.setState({ users: response.data });
+    } catch (error) {
+      console.error("Error searching users:", error);
+      this.setState({ users: [] });
+    }
+  };
+
+
   fetchUsers = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -80,7 +109,7 @@ class ListUserComponent extends React.Component {
 
   render() {
     const role = localStorage.getItem("role");
- if (role !== "ADMIN") {
+    if (role !== "ADMIN") {
       return <Redirect to="/unauthorized" />;
     }
 
@@ -89,16 +118,32 @@ class ListUserComponent extends React.Component {
         <Sidebar />
         <Box sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
           <HeaderComponent />
-          <Box sx={{ padding: "20px", marginTop:"70px", }}>
+          <Box sx={{ padding: "20px", marginTop: "70px", }}>
+            <Box sx={{ display: "flex", justifyContent: "center", marginBottom: "15px" }}>
+              <Box sx={{ display: "flex", maxWidth: "400px", width: "100%" }}>
+                <input
+                  type="text"
+                  placeholder="Search by Name"
+                  value={this.state.searchQuery}
+                  onChange={this.handleSearchChange}
+                  className="searchInput"
+                  style={{ marginRight: "10px", width: "250px" }} // fixed width
+                />
+                <button className="bntAction" onClick={this.searchUsers}>
+                  Search
+                </button>
+              </Box>
+            </Box>
             <button className="bntAction" onClick={this.addUser}>
               Add User
             </button>
+
             <br />
             <div className="row scrollable-div">
               <table className="table table-striped table-bordered">
                 <thead>
                   <tr>
-                    <th>Full Name</th>
+                    <th>Name</th>
                     <th>Username</th>
                     <th>Password</th>
                     <th>User Role</th>

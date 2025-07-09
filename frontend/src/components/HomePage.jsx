@@ -11,6 +11,8 @@ class NewHomePage extends Component {
             newsList: [],
             filteredNews: [],
             searchQuery: '',
+            searchMonth: '',
+            searchYear: '',
             showFooter: false,
             showHeader: true,
             lastScrollTop: 0,
@@ -44,24 +46,67 @@ class NewHomePage extends Component {
         this.setState({ searchQuery: e.target.value });
     };
 
+    handleMonthChange = (e) => {
+        this.setState({ searchMonth: e.target.value });
+    }
+
+    handleYearChange = (e) => {
+        this.setState({ searchYear: e.target.value });
+    }
+
     handleSearchSubmit = (e) => {
         e.preventDefault();
-        const { searchQuery } = this.state;
+        const { searchQuery, searchMonth, searchYear, newsList } = this.state;
 
-        if (searchQuery.trim() === '') {
-            // If input is empty, show all news again
-            this.setState({ filteredNews: this.state.newsList });
+        // If all are empty, reset
+        if (!searchQuery.trim() && !searchMonth && !searchYear) {
+            this.setState({ filteredNews: newsList });
             return;
         }
 
-        // Fetch from backend
+        // If only month and year are provided
+        if (!searchQuery.trim() && searchMonth && searchYear) {
+            axios.get(`http://localhost:8080/api/v1/news/search-by-month?month=${searchMonth}&year=${searchYear}`)
+                .then(res => {
+                    const sorted = res.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                    this.setState({ filteredNews: sorted });
+                })
+                .catch(err => {
+                    console.error("Search error:", err);
+                    this.setState({ filteredNews: [] });
+                });
+            return;
+        }
+
+        // If only searchQuery is provided
+        if (searchQuery.trim() && !searchMonth && !searchYear) {
+            axios.get(`http://localhost:8080/api/v1/news/fuzzy-search?query=${encodeURIComponent(searchQuery)}`)
+                .then(res => {
+                    const sorted = res.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                    this.setState({ filteredNews: sorted });
+                })
+                .catch(err => {
+                    console.error("Search error:", err);
+                    this.setState({ filteredNews: [] });
+                });
+            return;
+        }
+
+        // ✅ Combined: searchQuery + month/year
         axios.get(`http://localhost:8080/api/v1/news/fuzzy-search?query=${encodeURIComponent(searchQuery)}`)
             .then(res => {
-                const sorted = res.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                const filtered = res.data.filter(news => {
+                    const date = new Date(news.publicationDate);
+                    return (
+                        (!searchMonth || date.getMonth() + 1 === parseInt(searchMonth)) &&
+                        (!searchYear || date.getFullYear() === parseInt(searchYear))
+                    );
+                });
+                const sorted = filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
                 this.setState({ filteredNews: sorted });
             })
             .catch(err => {
-                console.error("Search error:", err);
+                console.error("Combined search error:", err);
                 this.setState({ filteredNews: [] });
             });
     };
@@ -72,129 +117,83 @@ class NewHomePage extends Component {
         const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
         const bottomThreshold = 50;
 
-        if (scrollTop > this.state.lastScrollTop) {
-            this.setState({ showHeader: false });
-        } else {
-            this.setState({ showHeader: true });
-        }
-        this.setState({ lastScrollTop: scrollTop <= 0 ? 0 : scrollTop });
-
-        if (documentHeight - (scrollTop + windowHeight) < bottomThreshold) {
-            this.setState({ showFooter: true });
-        } else {
-            this.setState({ showFooter: false });
-        }
+        this.setState({
+            showHeader: scrollTop <= this.state.lastScrollTop,
+            lastScrollTop: scrollTop <= 0 ? 0 : scrollTop,
+            showFooter: documentHeight - (scrollTop + windowHeight) < bottomThreshold
+        });
     }
 
     formatDate(dateString) {
-        const options = {
-            month: 'long',
-            day: 'numeric',
-            year: 'numeric',
-            hour: 'numeric',
-            minute: 'numeric',
-            hour12: true,
-        };
-
-        return new Date(dateString).toLocaleDateString('en-US', options);
+        return new Date(dateString).toLocaleString('en-US', {
+            month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true,
+        });
     }
 
     getViewerIp = async () => {
         try {
-            const response = await fetch('https://api.ipify.org?format=json');
-            if (!response.ok) throw new Error('IP fetch failed');
-            const data = await response.json();
+            const res = await fetch('https://api.ipify.org?format=json');
+            const data = await res.json();
             return data.ip;
-        } catch (error) {
-            console.error('Failed to fetch IP:', error);
+        } catch {
             return 'unknown';
         }
     };
 
-
     openModal = (news) => {
-        // Immediately show the modal
         this.setState({ selectedNews: news, showModal: true });
-
-        // Then fetch IP and track view in the background
-        this.getViewerIp().then(viewerIp => {
-            axios.post(`http://localhost:8080/api/v1/view-news/${news.id}?viewerIp=${viewerIp}`)
-                .then(() => {
-                    console.log('View tracked successfully');
-                })
-                .catch(err => {
-                    console.error('Failed to track view:', err);
-                });
+        this.getViewerIp().then(ip => {
+            axios.post(`http://localhost:8080/api/v1/view-news/${news.id}?viewerIp=${ip}`).catch(console.error);
         });
     };
 
-    closeModal = () => {
-        this.setState({ showModal: false, selectedNews: null });
-    }
+    closeModal = () => this.setState({ showModal: false, selectedNews: null });
 
     render() {
-        const { showHeader, showModal, selectedNews } = this.state;
+        const { showHeader, showModal, selectedNews, filteredNews, searchQuery } = this.state;
 
         return (
             <div style={{ position: 'relative' }}>
-                <Header style={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    zIndex: 1000,
-                    display: showHeader ? 'block' : 'none'
-                }} />
-
+                <Header style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000, display: showHeader ? 'block' : 'none' }} />
                 <div className="container" style={{ marginTop: '110px' }}>
                     <form className="mb-4 d-flex justify-content-center" onSubmit={this.handleSearchSubmit}>
-                        <div style={{ display: 'flex', maxWidth: '400px', width: '100%' }}>
+                        <div style={{ display: 'flex', gap: '10px', maxWidth: '600px', width: '100%' }}>
                             <input
                                 type="text"
                                 className="form-control"
                                 placeholder="Search..."
-                                style={{
-                                    borderRadius: '0.375rem 0 0 0.375rem', // round left only
-                                    borderRight: 'none',
-                                }}
+                                style={{ borderRadius: '0.375rem', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}
                                 value={this.state.searchQuery}
                                 onChange={this.handleSearchInputChange}
                             />
-                            <button
-                                type="submit"
-                                className="btn btn-success"
-                                style={{
-                                    borderRadius: '0 0.375rem 0.375rem 0', // round right only
-                                    padding: '6px 16px',
-                                    whiteSpace: 'nowrap',
-                                }}
-                            >
-                                Search
-                            </button>
+                            <select className="form-control" onChange={this.handleMonthChange}>
+                                <option value="">Month</option>
+                                {[...Array(12)].map((_, i) => (
+                                    <option key={i + 1} value={i + 1}>{new Date(0, i).toLocaleString('en', { month: 'long' })}</option>
+                                ))}
+                            </select>
+                            <input
+                                type="number"
+                                className="form-control"
+                                placeholder="Year"
+                                onChange={this.handleYearChange}
+                                min="2000"
+                                max={new Date().getFullYear()}
+                            />
+                            <button type="submit" className="btn btn-success">Search</button>
                         </div>
                     </form>
 
-
-
-                    <div className="row" style={{
-                        maxHeight: 'calc(100vh - 60px)',
-                        overflowY: 'auto',
-                        scrollbarWidth: 'none',
-                        msOverflowStyle: 'none'
-                    }}>
-                        {this.state.filteredNews.length === 0 && (
+                    <div className="row">
+                        {filteredNews.length === 0 && (
                             <div className="col-12 text-center text-muted">
-                                No news found for "{this.state.searchQuery}"
+                                No news found for "{searchQuery}"
                             </div>
                         )}
 
-                        {this.state.filteredNews.map(news => (
+                        {filteredNews.map(news => (
                             <div key={news.id} className="col-md-4 mb-4">
-                                <div
-                                    className="card h-100 clickable-card"
-                                    onClick={() => this.openModal(news)}
-                                    style={{ cursor: 'pointer' }}
-                                >
+                                <div className="card h-100 clickable-card" onClick={() => this.openModal(news)} style={{ cursor: 'pointer' }}>
                                     {news.embedYouTubeUrl ? (
                                         <div className="embed-responsive embed-responsive-16by9">
                                             <iframe
@@ -205,12 +204,7 @@ class NewHomePage extends Component {
                                             ></iframe>
                                         </div>
                                     ) : news.thumbnailUrl && (
-                                        <img
-                                            src={`data:image/jpeg;base64,${news.thumbnailUrl}`}
-                                            className="card-img-top"
-                                            alt="Thumbnail"
-                                            style={{ objectFit: 'cover', maxHeight: '300px' }}
-                                        />
+                                        <img src={`data:image/jpeg;base64,${news.thumbnailUrl}`} className="card-img-top" alt="Thumbnail" style={{ objectFit: 'cover', maxHeight: '300px' }} />
                                     )}
                                     <div className="card-body">
                                         <h5 className="card-title">{news.title}</h5>
@@ -235,21 +229,27 @@ class NewHomePage extends Component {
                             display: 'flex',
                             justifyContent: 'center',
                             alignItems: 'center',
-                            zIndex: 1000,
+                            zIndex: 1050,
+                            padding: '20px', // space for mobile view
                         }}
                         onClick={this.closeModal}
                     >
                         <div
+                            className="card shadow"
                             style={{
-                                backgroundColor: 'white',
-                                padding: '20px',
-                                borderRadius: '10px',
-                                width: '90%',
+                                backgroundColor: '#fff',
+                                borderRadius: '16px',
+                                width: '100%',
                                 maxWidth: '600px',
-                                maxHeight: '80vh',
+                                maxHeight: '85vh',
                                 overflowY: 'auto',
-                                textAlign: 'center',
+                                padding: '30px 20px 20px 20px',
                                 position: 'relative',
+                                boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                textAlign: 'center',
                             }}
                             onClick={(e) => e.stopPropagation()}
                         >
@@ -259,7 +259,7 @@ class NewHomePage extends Component {
                                     position: 'absolute',
                                     top: '10px',
                                     right: '10px',
-                                    backgroundColor: 'green',
+                                    background: '#28a745', // Bootstrap green
                                     color: '#fff',
                                     border: 'none',
                                     borderRadius: '50%',
@@ -270,17 +270,21 @@ class NewHomePage extends Component {
                                     lineHeight: '30px',
                                     textAlign: 'center',
                                     cursor: 'pointer',
-                                    boxShadow: '0 2px 5px rgba(0, 0, 0, 0.3)',
+                                    boxShadow: '0 2px 5px rgba(0,0,0,0.3)'
                                 }}
                                 title="Close"
                             >
                                 &times;
                             </button>
 
-                            <ViewNewsPreview news={selectedNews} />
+                            {/* Centered news preview */}
+                            <div style={{ width: '100%' }}>
+                                <ViewNewsPreview news={selectedNews} />
+                            </div>
                         </div>
                     </div>
                 )}
+
             </div>
         );
     }
